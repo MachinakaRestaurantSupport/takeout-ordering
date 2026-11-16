@@ -7,7 +7,7 @@
 
 ## 1. プロジェクト基盤
 
-- [ ] 1.1 `pyproject.toml`（`name="takeout-ordering"`, pytest `pythonpath=["src"]`, ruff `line-length=100`）の作成
+- [x] 1.1 `pyproject.toml`（`name="takeout-ordering"`, pytest `pythonpath=["src"]`, ruff `line-length=100`）の作成
 
 ## 2. アプリケーション実装
 
