@@ -18,4 +18,4 @@
 
 ## 3. 単体試験・品質検証
 
-- [ ] 3.1 `tests/test_takeout.py` の実装（`httpx.MockTransport` を用いた全フロー検証）および `pytest` 実行確認
+- [x] 3.1 `tests/test_takeout.py` の実装（`httpx.MockTransport` を用いた全フロー検証）および `pytest` 実行確認
