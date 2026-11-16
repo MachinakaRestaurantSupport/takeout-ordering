@@ -14,9 +14,9 @@ context: |
 
 rules:
   specs:
-    - 詳細設計は必ずモジュール単位の WHEN/THEN シナリオ形式で書く（`specs/<module>/spec.md`）
-    - design.md に USDM 要求ID（上位要求 / 下位要求番号）とのトレーサビリティを記載する
-    - `reference/system-integration/` 配下は変更しない
+    - "詳細設計は必ずモジュール単位の WHEN/THEN シナリオ形式で書く（`specs/<module>/spec.md`）"
+    - "design.md に USDM 要求ID（上位要求 / 下位要求番号）とのトレーサビリティを記載する"
+    - "`reference/system-integration/` 配下は変更しない"
   tasks:
     - タスクは本ツールの実装・単体試験までとする。結合試験・総合試験は system-integration 側で管理される
 
