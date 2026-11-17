@@ -13,6 +13,7 @@ from takeout_ordering.models import (
     TakeoutOrderRequest,
 )
 from takeout_ordering.store import TakeoutStore
+from takeout_ordering.ui import create_ui_router
 
 
 def create_app(
@@ -25,6 +26,7 @@ def create_app(
     resolved_order_client = order_client or OrderClient()
     store = TakeoutStore()
     app.state.store = store
+    app.include_router(create_ui_router(store, resolved_menu_client, resolved_order_client))
 
     @app.get("/health")
     def health() -> dict[str, str]:

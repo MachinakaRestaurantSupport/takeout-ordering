@@ -161,3 +161,11 @@ def test_notify_ready() -> None:
     }
     assert len(client.app.state.store.notifications) == 1
     assert client.app.state.store.notifications[0]["order_id"] == "ord-1001"
+
+
+def test_takeout_ui_screens() -> None:
+    client = _build_test_client()
+    for path in ("/ui/takeout/login", "/ui/takeout/reserve", "/ui/takeout/status"):
+        res = client.get(path)
+        assert res.status_code == 200
+        assert "持ち帰り注文" in res.text

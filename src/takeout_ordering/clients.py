@@ -56,3 +56,9 @@ class OrderClient:
         response = self._client.get(f"/orders/{order_id}")
         response.raise_for_status()
         return response.json()
+
+    def list_orders(self) -> list[dict[str, Any]]:
+        """Fetch all orders via GET /orders."""
+        response = self._client.get("/orders")
+        response.raise_for_status()
+        return response.json()
