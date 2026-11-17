@@ -1,0 +1,1 @@
+"""Takeout ordering subsystem package."""
