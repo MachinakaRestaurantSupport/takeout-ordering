@@ -6,7 +6,7 @@ import httpx
 import pytest
 from fastapi.testclient import TestClient
 
-from takeout_ordering.clients import MenuClient, OrderClient
+from takeout_ordering.clients import MenuClient, OrderClient, ProductClient
 from takeout_ordering.main import create_app
 
 
@@ -55,9 +55,33 @@ def _build_test_client(
             )
         return httpx.Response(404, json={"detail": "Order not found"})
 
+    products = {
+        "prod-1": {"id": "prod-1", "name": "唐揚げ弁当", "price": 850, "takeout_available": True},
+        "prod-2": {"id": "prod-2", "name": "焼き魚弁当", "price": 900, "takeout_available": True},
+        "prod-dine": {
+            "id": "prod-dine",
+            "name": "特製ラーメン",
+            "price": 980,
+            "takeout_available": False,
+        },
+    }
+
+    def product_handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "GET" and request.url.path.startswith("/products/"):
+            product_id = request.url.path.removeprefix("/products/")
+            if product_id not in products:
+                return httpx.Response(404, json={"detail": "Product not found"})
+            return httpx.Response(200, json=products[product_id])
+        return httpx.Response(404, json={"detail": "Not found"})
+
     menu_client = MenuClient(transport=httpx.MockTransport(menu_handler))
     order_client = OrderClient(transport=httpx.MockTransport(order_handler))
-    app = create_app(menu_client=menu_client, order_client=order_client)
+    product_client = ProductClient(transport=httpx.MockTransport(product_handler))
+    app = create_app(
+        menu_client=menu_client,
+        order_client=order_client,
+        product_client=product_client,
+    )
     return TestClient(app)
 
 
@@ -169,3 +193,52 @@ def test_takeout_ui_screens() -> None:
         res = client.get(path)
         assert res.status_code == 200
         assert "持ち帰り注文" in res.text
+
+
+def test_takeout_order_overrides_client_unit_price_with_master_price() -> None:
+    captured: list[dict] = []
+    client = _build_test_client(captured_order_requests=captured)
+
+    resp = client.post(
+        "/takeout/orders",
+        json={
+            "customer_id": "cust-line-001",
+            "pickup_at": "2026-11-16T18:30:00+09:00",
+            "items": [{"product_id": "prod-1", "unit_price": 10, "quantity": 2}],
+        },
+    )
+    assert resp.status_code == 201
+    assert captured[0]["items"] == [
+        {
+            "product_id": "prod-1",
+            "product_name": "唐揚げ弁当",
+            "unit_price": 850,
+            "quantity": 2,
+        }
+    ]
+
+
+def test_takeout_order_unknown_product_returns_404() -> None:
+    client = _build_test_client()
+    resp = client.post(
+        "/takeout/orders",
+        json={
+            "customer_id": "cust-line-001",
+            "pickup_at": "2026-11-16T18:30:00+09:00",
+            "items": [{"product_id": "missing", "quantity": 1}],
+        },
+    )
+    assert resp.status_code == 404
+
+
+def test_takeout_order_unavailable_product_returns_422() -> None:
+    client = _build_test_client()
+    resp = client.post(
+        "/takeout/orders",
+        json={
+            "customer_id": "cust-line-001",
+            "pickup_at": "2026-11-16T18:30:00+09:00",
+            "items": [{"product_id": "prod-dine", "quantity": 1}],
+        },
+    )
+    assert resp.status_code == 422
