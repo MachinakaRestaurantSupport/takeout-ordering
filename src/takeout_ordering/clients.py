@@ -23,6 +23,26 @@ class MenuClient:
         return response.json()
 
 
+class ProductClient:
+    """Client for retrieving master product details from product-management."""
+
+    def __init__(
+        self,
+        base_url: str = "http://product-management",
+        transport: httpx.BaseTransport | None = None,
+        client: httpx.Client | None = None,
+    ) -> None:
+        self._client = client or httpx.Client(base_url=base_url, transport=transport)
+
+    def get_product(self, product_id: str) -> dict[str, Any] | None:
+        """Fetch product details via GET /products/{product_id}; return None if not found."""
+        response = self._client.get(f"/products/{product_id}")
+        if response.status_code == 404:
+            return None
+        response.raise_for_status()
+        return response.json()
+
+
 class OrderClient:
     """Client for creating and querying takeout orders in order-management (I-2)."""
 
