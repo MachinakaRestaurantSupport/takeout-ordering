@@ -5,7 +5,7 @@ from typing import Any
 import httpx
 from fastapi import FastAPI, HTTPException, status
 
-from takeout_ordering.clients import MenuClient, OrderClient
+from takeout_ordering.clients import MenuClient, OrderClient, ProductClient
 from takeout_ordering.models import (
     LoginRequest,
     LoginResponse,
@@ -19,11 +19,13 @@ from takeout_ordering.ui import create_ui_router
 def create_app(
     menu_client: MenuClient | None = None,
     order_client: OrderClient | None = None,
+    product_client: ProductClient | None = None,
 ) -> FastAPI:
     """Create and configure the FastAPI application."""
     app = FastAPI(title="Takeout Ordering Service", version="0.1.0")
     resolved_menu_client = menu_client or MenuClient()
     resolved_order_client = order_client or OrderClient()
+    resolved_product_client = product_client or ProductClient()
     store = TakeoutStore()
     app.state.store = store
     app.include_router(create_ui_router(store, resolved_menu_client, resolved_order_client))
@@ -57,8 +59,28 @@ def create_app(
 
     @app.post("/takeout/orders", status_code=status.HTTP_201_CREATED)
     def create_takeout_order(payload: TakeoutOrderRequest) -> Any:
-        items_payload = [item.model_dump() for item in payload.items]
         try:
+            items_payload: list[dict[str, Any]] = []
+            for item in payload.items:
+                prod = resolved_product_client.get_product(item.product_id)
+                if prod is None:
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail=f"Product '{item.product_id}' not found",
+                    )
+                if not prod.get("takeout_available", True):
+                    raise HTTPException(
+                        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                        detail=f"Product '{item.product_id}' is not available for takeout",
+                    )
+                items_payload.append(
+                    {
+                        "product_id": item.product_id,
+                        "product_name": prod["name"],
+                        "unit_price": int(prod["price"]),
+                        "quantity": item.quantity,
+                    }
+                )
             return resolved_order_client.create_takeout_order(
                 customer_id=payload.customer_id,
                 pickup_at=payload.pickup_at,
