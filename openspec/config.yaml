@@ -8,7 +8,7 @@ context: |
   - 全体システムの USDM: `reference/system-integration/usdm/machinaka_restaurant_support_tools/`
   - 全体システム設計: `reference/system-integration/docs/system-design.md`
   - 作業は system-integration の openspec タスクにある本リポジトリ宛て委譲指示に基づき、system-integration と同じブランチ `feature/<change-id>` で実施する。`main` は保護。
-  - opsx フロー: propose = `feature/<change-id>` を作成し、サブモジュール参照先ブランチも同名へ切り替えて着手（`git config -f .gitmodules submodule.reference/system-integration.branch feature/<change-id> && git submodule update --remote reference/system-integration`）/ apply = 設計（design.md + モジュールごと WHEN/THEN の specs/<module>/spec.md）に基づき実装〜単体試験まで完了 / archive = このリポジトリの main への GitHub プルリクエスト作成。PR マージ時はファイル一覧の更新とサブモジュール参照ブランチを main に戻す。
+  - opsx フロー: propose = `feature/<change-id>` を作成し、`.gitmodules`（`branch` 指定なし）は変更せず `reference/system-integration` を対象コミット SHA（`<commit-sha>`）へチェックアウトして着手（`git -C reference/system-integration fetch origin feature/<change-id> && git -C reference/system-integration checkout <commit-sha>`）/ apply = 設計（design.md + モジュールごと WHEN/THEN の specs/<module>/spec.md）に基づき実装〜単体試験まで完了 / archive = `openspec archive <change-id> -y` 完了後、結合試験・全レビュー完了を経て（`system-integration` の `Create a merge commit` 先行マージ後に）このリポジトリの `main` へ PR マージ（submodule はコミット SHA 指定のためマージ後の戻し作業は不要）。
   - `reference/system-integration/` 配下を変更してはならない（正本は system-integration リポジトリ側）。仕様の問題に気づいたらユーザーに報告し、system-integration 側での変更提案を提示する。
   - エージェントのワークフロー中に git commit を実行しない。GitHub プルリクエスト作成はユーザーの明示的な指示でのみ実行する。
 
@@ -28,5 +28,5 @@ operations:
       - 実装〜単体試験完了後、GitHub プルリクエスト作成を提案する（ユーザー指示後に実行）
   archive:
     guidance:
-      - PR マージ時はサブモジュール参照ブランチを main に戻し、参照コミットを更新する
+      - 完了時は必ず `openspec archive <change-id> -y` を実行し、確定コミット SHA 同期と `system-integration` 先行 Merge commit 後に本リポジトリの PR を `main` へマージする（戻し作業不要）
       - git commit は実行しない

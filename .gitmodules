@@ -1,4 +1,3 @@
 [submodule "reference/system-integration"]
 	path = reference/system-integration
 	url = https://github.com/MachinakaRestaurantSupport/system-integration.git
-	branch = feature/issue-3

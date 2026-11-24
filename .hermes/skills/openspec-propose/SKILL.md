@@ -15,20 +15,16 @@ metadata:
 このリポジトリは MachinakaRestaurantSupportTools のサブシステム「持ち帰り注文」です。仕様書の正本は **system-integration** リポジトリ側にあり、git submodule `reference/system-integration/`（読み取り専用）として参照します。以下のルールは上記の記述と矛盾する場合、こちらを優先してください。
 
 - 参照元: 当該ツールの USDM = `reference/system-integration/usdm/takeout_ordering/`、全体 USDM = `reference/system-integration/usdm/machinaka_restaurant_support_tools/`、全体システム設計 = `reference/system-integration/docs/system-design.md`。
-- opsx フロー: **propose** = system-integration の feature ブランチに合わせたブランチ `feature/<change-id>` を作成し、サブモジュール参照先ブランチも同名へ切り替えてから着手する:
+- opsx フロー: **propose** = `system-integration` と揃えた `feature/<change-id>` ブランチを作成し、`.gitmodules`（`branch` 指定なし）は変更せず `reference/system-integration` を対象コミット SHA（`<commit-sha>`）へチェックアウトして着手する:
   ```bash
   git checkout -b feature/<change-id>
-  git config -f .gitmodules submodule.reference/system-integration.branch feature/<change-id>
-  git submodule update --remote reference/system-integration
+  git -C reference/system-integration fetch origin feature/<change-id>
+  git -C reference/system-integration checkout <commit-sha>
+  git add reference/system-integration
   ```
 - opsx で作るもの: 当該ツールのソフトウェア設計（`design.md`）と、モジュールごとの WHEN/THEN シナリオ形式の詳細設計（`specs/<module>/spec.md`）。design.md に USDM 要求ID とのトレーサビリティを記載する。
 - **apply** = 実装〜単体試験まで完了（全テストパス）。タスクは本ツールの実装・単体試験まで。結合試験・総合試験は system-integration 側で管理される。
-- **archive** = 最後にこのリポジトリの main への GitHub プルリクエストを作成。その PR をマージするときはファイル一覧の更新とサブモジュール参照ブランチを main に戻す:
-  ```bash
-  git config -f .gitmodules submodule.reference/system-integration.branch main
-  git submodule update --remote reference/system-integration
-  git add .gitmodules reference/system-integration
-  ```
+- **archive** = `openspec archive <change-id> -y` を完了した上で、結合試験・全 PR レビュー完了後に `system-integration` PR（`Create a merge commit` 固定）へ続けて本リポジトリの PR を `main` へマージする（submodule はコミット SHA 指定のため、マージ後の参照戻し作業は不要）。
 - `reference/system-integration/` の内容は変更しない（正本は system-integration リポジトリ側）。仕様の問題に気づいたらユーザーに報告し、system-integration 側での変更提案を提示する。
 - git commit / push / PR 作成はユーザーの明示的な指示でのみ実行し、それ以外でこのワークフロー中にコミットしない。
 

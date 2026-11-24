@@ -10,20 +10,16 @@ MachinakaRestaurantSupportTools のサブシステム「持ち帰り注文」の
 
 ## opsx フロー
 
-1. **opsx:propose**: system-integration の feature ブランチに合わせた `feature/<change-id>` を作成し、サブモジュール参照先ブランチも同名へ切り替え
+1. **opsx:propose**: `system-integration` と揃えた `feature/<change-id>` ブランチを作成し、`.gitmodules`（`branch` 指定なし）は変更せず `reference/system-integration` に対象コミット SHA（`<commit-sha>`）をチェックアウトして gitlink を更新
    ```bash
    git checkout -b feature/<change-id>
-   git config -f .gitmodules submodule.reference/system-integration.branch feature/<change-id>
-   git submodule update --remote reference/system-integration
+   git -C reference/system-integration fetch origin feature/<change-id>
+   git -C reference/system-integration checkout <commit-sha>
+   git add reference/system-integration
    ```
 2. OpenSpec でソフトウェア設計（design.md）とモジュールごとの WHEN/THEN 詳細設計（specs/<module>/spec.md）を作成
 3. **opsx:apply**: 実装 → 単体試験（全テストパス必須。実行結果を報告）
-4. **opsx:archive**: このリポジトリの main への GitHub プルリクエスト作成。PR マージ時はファイル一覧の更新とサブモジュール参照ブランチを main に戻す
-   ```bash
-   git config -f .gitmodules submodule.reference/system-integration.branch main
-   git submodule update --remote reference/system-integration
-   git add .gitmodules reference/system-integration
-   ```
+4. **opsx:archive**: `openspec archive <change-id> -y` を完了した上で、結合試験・全 PR レビュー完了後に `system-integration` PR（`Create a merge commit` 固定）へ続けて本リポジトリの PR を `main` へマージ（submodule はコミット SHA 指定のため、マージ後の参照戻し作業は不要）
 
 ## ルール
 
